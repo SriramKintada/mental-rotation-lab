@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Shepard-Metzler 3D Mental Rotation Lab</title>
+
+  <!-- Typography & Tailwind -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Supabase, Icons, Confetti, Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            ink: '#080c14',
+            surface: '#0f172a',
+            surfaceElevated: '#1e293b',
+            borderSubtle: '#334155',
+            accent: '#6366f1',
+            accentGlow: 'rgba(99, 102, 241, 0.25)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .btn-press:active {
+      transform: scale(0.97);
+    }
+    canvas {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
+    .fixation-cross {
+      animation: pulse-subtle 0.8s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-ink text-slate-100 min-h-screen flex flex-col font-sans antialiased overflow-x-hidden">
+
+  <!-- TOP APP BAR -->
+  <header class="w-full border-b border-borderSubtle/50 bg-surface/90 backdrop-blur-md px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+        <i data-lucide="box" class="w-4 h-4"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5">
+          Mental Rotation Lab
+          <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Shepard & Metzler 1971</span>
+        </h1>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button id="btnHeaderCohort" class="text-xs px-2.5 py-1.5 rounded-lg bg-surfaceElevated hover:bg-slate-700 text-slate-300 font-semibold flex items-center gap-1.5 transition border border-borderSubtle">
+        <i data-lucide="line-chart" class="w-3.5 h-3.5"></i>
+        <span>Cohort Slopes</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="flex-1 w-full max-w-lg mx-auto p-4 flex flex-col justify-center relative">
+
+    <!-- SCREEN 1: ONBOARDING & PROFILE SETUP -->
+    <section id="screenOnboarding" class="space-y-4 py-2">
+      <div class="space-y-1.5">
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <i data-lucide="compass" class="w-3 h-3"></i> 3D Spatial Cognition Test (~2 Mins)
+        </div>
+        <h2 class="text-2xl font-black tracking-tight text-white">Shepard-Metzler Paradigm</h2>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Measuring the angular velocity of 3D spatial coordinate rotation in the mind. 
+          Comparing spatial manipulation across professional domains (Architects vs Engineers vs Artists).
+        </p>
+      </div>
+
+      <!-- PARTICIPANT FORM -->
+      <div class="bg-surface border border-borderSubtle rounded-2xl p-4 space-y-3.5 shadow-xl">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
+          <i data-lucide="user" class="w-3.5 h-3.5"></i> Participant Information
+        </h3>
+
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-slate-300">Your Name / Alias</label>
+          <input id="inputName" type="text" placeholder="Sriram" 
+            class="w-full bg-ink border border-borderSubtle rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-slate-300">Professional Discipline / Background</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button type="button" class="domain-pill py-2 px-3 rounded-xl border border-borderSubtle bg-ink text-slate-300 hover:border-indigo-500 transition text-left" data-val="Architecture">📐 Architecture</button>
+            <button type="button" class="domain-pill py-2 px-3 rounded-xl border border-borderSubtle bg-ink text-slate-300 hover:border-indigo-500 transition text-left" data-val="Software Engineering">💻 Software Dev</button>
+            <button type="button" class="domain-pill py-2 px-3 rounded-xl border border-borderSubtle bg-ink text-slate-300 hover:border-indigo-500 transition text-left" data-val="Visual Art / Design">🎨 Art & Design</button>
+            <button type="button" class="domain-pill py-2 px-3 rounded-xl border border-borderSubtle bg-ink text-slate-300 hover:border-indigo-500 transition text-left" data-val="Electronics / Hardware">🔌 Electronics Eng</button>
+            <button type="button" class="domain-pill py-2 px-3 rounded-xl border border-borderSubtle bg-ink text-slate-300 hover:border-indigo-500 transition text-left" data-val="Medicine / Doctor">🩺 Medicine / Doctor</button>
+            <button type="button" class="domain-pill py-2 px-3 rounded-xl border border-borderSubtle bg-ink text-slate-300 hover:border-indigo-500 transition text-left" data-val="Mathematics / Physics">∑ Math / Physics</button>
+            <button type="button" class="domain-pill py-2 px-3 rounded-xl border border-borderSubtle bg-ink text-slate-300 hover:border-indigo-500 transition text-left" data-val="Business Administration">💼 Business Admin</button>
+            <button type="button" class="domain-pill py-2 px-3 rounded-xl border border-borderSubtle bg-ink text-slate-300 hover:border-indigo-500 transition text-left" data-val="Other">✨ Other</button>
+          </div>
+          <input id="selectedDomain" type="hidden" value="Architecture">
+        </div>
+      </div>
+
+      <!-- TASK EXPLANATION WITH VISUAL DEMO -->
+      <div class="bg-indigo-950/20 border border-indigo-800/40 rounded-2xl p-4 space-y-3">
+        <h4 class="text-xs font-bold text-indigo-300 uppercase font-mono tracking-wider flex items-center gap-1.5">
+          <i data-lucide="eye" class="w-3.5 h-3.5"></i> How This Works
+        </h4>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          You will see <strong>two 3D block figures</strong> side by side. Figure B is rotated by an angle (0° to 180°).
+        </p>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-surface/80 p-2.5 rounded-xl border border-emerald-500/30">
+            <span class="font-bold text-emerald-400 block mb-0.5">SAME (Identical)</span>
+            <p class="text-[11px] text-slate-400">Can be rotated in 3D space to match Figure A exactly.</p>
+          </div>
+          <div class="bg-surface/80 p-2.5 rounded-xl border border-amber-500/30">
+            <span class="font-bold text-amber-400 block mb-0.5">MIRROR (Different)</span>
+            <p class="text-[11px] text-slate-400">A mirror-reflection. No matter how you turn it, it won't match.</p>
+          </div>
+        </div>
+
+        <!-- PROMINENT SPEED DIRECTIVE -->
+        <div class="bg-amber-500/15 border border-amber-500/40 rounded-xl p-3 flex items-start gap-2.5">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+          <div class="text-xs text-amber-200 leading-relaxed">
+            <strong class="text-amber-300 font-bold block uppercase tracking-wide text-[11px]">⚡ Core Rule: Respond as Fast as Possible!</strong>
+            Do not second-guess or hesitate. Trust your instantaneous 3D visual perception and tap immediately! 20 quick trials.
+          </div>
+        </div>
+      </div>
+
+      <button id="btnStartTask" class="btn-press w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition">
+        <span>Start 3D Mental Rotation</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </button>
+    </section>
+
+    <!-- SCREEN 2: COUNTDOWN -->
+    <section id="screenCountdown" class="hidden flex-col items-center justify-center text-center space-y-5 py-20">
+      <div class="space-y-2">
+        <p class="text-xs font-mono uppercase tracking-wider text-slate-400">Calibrating Visual Cortex</p>
+        <div id="countdownNumber" class="text-7xl font-black text-indigo-400 font-mono animate-bounce">3</div>
+      </div>
+      <p class="text-xs text-slate-500 max-w-xs">Look at the two figures and decide: Are they identical or mirror-reversed?</p>
+    </section>
+
+    <!-- SCREEN 3: ACTIVE TRIAL VIEW -->
+    <section id="screenTrial" class="hidden flex-col justify-between h-[82vh] max-h-[640px] py-1">
+      
+      <!-- Top Trial Progress -->
+      <div class="flex items-center justify-between text-xs font-mono text-slate-400 px-1">
+        <span id="trialIndicator">Trial 1 / 20</span>
+        <div class="flex items-center gap-2">
+          <span id="angleIndicator" class="text-[10px] px-2 py-0.5 rounded bg-surfaceElevated text-indigo-300 border border-borderSubtle">Rotation: 90°</span>
+          <div class="w-24 h-1.5 bg-surfaceElevated rounded-full overflow-hidden">
+            <div id="trialProgressBar" class="h-full bg-indigo-500 transition-all duration-200" style="width: 5%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Display Area: Two Side-by-Side 3D PolyCubes -->
+      <div id="stimulusBox" class="flex-1 flex flex-col justify-center items-center relative bg-surface/60 border border-borderSubtle rounded-2xl p-2 my-3 shadow-2xl">
+        
+        <!-- Fixation Cross -->
+        <div id="fixationCross" class="text-4xl text-slate-500 font-mono font-bold fixation-cross">+</div>
+
+        <!-- Stimulus Canvas Container -->
+        <div id="canvasPairContainer" class="hidden w-full flex items-center justify-around gap-2 px-1">
+          <!-- Left: Figure A (Reference) -->
+          <div class="flex flex-col items-center">
+            <div class="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1 font-semibold">Figure A</div>
+            <div class="w-[145px] h-[145px] sm:w-[170px] sm:h-[170px] bg-ink/70 rounded-xl border border-borderSubtle/70 flex items-center justify-center p-1 shadow-inner">
+              <canvas id="canvasA" width="280" height="280" class="w-full h-full"></canvas>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="flex flex-col items-center justify-center text-slate-600">
+            <span class="text-xs font-mono font-bold">vs</span>
+          </div>
+
+          <!-- Right: Figure B (Rotated & Mirrored or Same) -->
+          <div class="flex flex-col items-center">
+            <div class="text-[10px] font-mono text-indigo-400 uppercase tracking-wider mb-1 font-semibold">Figure B (Rotated)</div>
+            <div class="w-[145px] h-[145px] sm:w-[170px] sm:h-[170px] bg-ink/70 rounded-xl border border-borderSubtle/70 flex items-center justify-center p-1 shadow-inner">
+              <canvas id="canvasB" width="280" height="280" class="w-full h-full"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback Flash Pill -->
+        <div id="feedbackPill" class="hidden absolute top-3 px-3 py-1 rounded-full text-[11px] font-bold font-mono"></div>
+      </div>
+
+      <!-- Large Touch Controls (Thumb-Zone Friendly) -->
+      <div class="space-y-2">
+        <div class="text-center text-[11px] text-slate-300 font-medium flex items-center justify-center gap-1.5">
+          <span class="text-amber-400 font-extrabold flex items-center gap-0.5"><i data-lucide="zap" class="w-3 h-3"></i> Fast Intuition:</span> 
+          <span>Are Figures A and B the same shape?</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button id="btnSame" type="button" class="btn-press py-4 rounded-xl font-black text-white text-base shadow-lg flex items-center justify-center gap-2 border border-emerald-500/40 bg-emerald-600 hover:bg-emerald-500 transition">
+            <i data-lucide="check" class="w-5 h-5"></i>
+            <span>SAME (Identical)</span>
+            <span class="text-[10px] opacity-60 font-mono hidden sm:inline">(S)</span>
+          </button>
+          <button id="btnMirror" type="button" class="btn-press py-4 rounded-xl font-black text-white text-base shadow-lg flex items-center justify-center gap-2 border border-amber-500/40 bg-amber-600 hover:bg-amber-500 transition">
+            <i data-lucide="copy" class="w-5 h-5"></i>
+            <span>MIRROR (Flipped)</span>
+            <span class="text-[10px] opacity-60 font-mono hidden sm:inline">(M)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 4: DETAILED RESULTS & REGRESSION SLOPE -->
+    <section id="screenResults" class="hidden space-y-4 py-2">
+      <div class="text-center space-y-1">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Spatial Evaluation Complete!
+        </div>
+        <h2 id="resultParticipantName" class="text-2xl font-black text-white">Spatial Telemetry Profile</h2>
+        <p id="resultSyncStatus" class="text-xs text-slate-400">Pushing metrics to Supabase telemetry...</p>
+      </div>
+
+      <!-- KEY CARDS: ROTATION SLOPE & ACCURACY -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-surface border border-borderSubtle rounded-xl p-3.5 space-y-1">
+          <div class="text-[10px] uppercase font-mono tracking-wider text-slate-400">Rotation Velocity Slope</div>
+          <div id="metricSlope" class="text-2xl font-black text-indigo-400 font-mono">0.0 ms/°</div>
+          <p class="text-[10px] text-slate-500 leading-tight">Angular mental latency ($k$)</p>
+        </div>
+        <div class="bg-surface border border-borderSubtle rounded-xl p-3.5 space-y-1">
+          <div class="text-[10px] uppercase font-mono tracking-wider text-slate-400">Overall Accuracy</div>
+          <div id="metricAccuracy" class="text-2xl font-black text-emerald-400 font-mono">100%</div>
+          <p class="text-[10px] text-slate-500 leading-tight">Correct spatial classifications</p>
+        </div>
+      </div>
+
+      <!-- CHART: REACTION TIME VS ROTATION ANGLE -->
+      <div class="bg-surface border border-borderSubtle rounded-xl p-3.5 space-y-2 shadow-lg">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold uppercase font-mono text-slate-300">Reaction Time vs. Angle</span>
+          <span class="text-[10px] text-slate-500 font-mono">Shepard-Metzler Curve</span>
+        </div>
+        <div class="w-full h-44">
+          <canvas id="slopeChart"></canvas>
+        </div>
+      </div>
+
+      <!-- COGNITIVE INTERPRETATION BOX -->
+      <div id="spatialInsightBox" class="bg-indigo-950/20 border border-indigo-800/40 rounded-xl p-3.5 text-xs text-slate-300 leading-relaxed">
+        <strong>Spatial Analysis:</strong> Calculating cognitive profile...
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="space-y-2">
+        <button id="btnOpenCohort" class="w-full py-3 px-4 rounded-xl bg-surfaceElevated hover:bg-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2 transition border border-borderSubtle">
+          <i data-lucide="users" class="w-3.5 h-3.5"></i>
+          <span>View Cohort Domain Comparison</span>
+        </button>
+        <button id="btnRetake" class="w-full py-2.5 px-4 rounded-xl text-slate-400 hover:text-white text-xs flex items-center justify-center gap-1.5 transition">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Retake Experiment</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 5: LIVE COHORT LEADERBOARD / ADMIN -->
+    <section id="screenCohort" class="hidden space-y-4 py-2">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Spatial Cognition Leaderboard</h2>
+          <p class="text-xs text-slate-400">Architects vs Devs vs Artists live telemetry</p>
+        </div>
+        <button id="btnCohortBack" class="text-xs px-2.5 py-1.5 rounded-lg bg-surfaceElevated text-slate-300 hover:text-white flex items-center gap-1 border border-borderSubtle">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back
+        </button>
+      </div>
+
+      <!-- COHORT SUMMARY STATS -->
+      <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div class="bg-surface border border-borderSubtle p-2.5 rounded-xl">
+          <div class="text-[10px] text-slate-400">Total Tested</div>
+          <div id="statCohortCount" class="text-lg font-mono font-bold text-white">0</div>
+        </div>
+        <div class="bg-surface border border-borderSubtle p-2.5 rounded-xl">
+          <div class="text-[10px] text-slate-400">Mean Slope</div>
+          <div id="statCohortMeanSlope" class="text-lg font-mono font-bold text-indigo-400">0 ms/°</div>
+        </div>
+        <div class="bg-surface border border-borderSubtle p-2.5 rounded-xl">
+          <div class="text-[10px] text-slate-400">Cohort Accuracy</div>
+          <div id="statCohortAcc" class="text-lg font-mono font-bold text-emerald-400">0%</div>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button id="btnRefreshCohort" class="flex-1 py-2 px-3 rounded-xl bg-surface border border-borderSubtle hover:bg-surfaceElevated text-xs text-slate-300 font-medium flex items-center justify-center gap-1.5 transition">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Telemetry
+        </button>
+        <button id="btnCopyCohortReport" class="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs text-white font-medium flex items-center justify-center gap-1.5 transition">
+          <i data-lucide="clipboard" class="w-3.5 h-3.5"></i> Copy Markdown Table
+        </button>
+      </div>
+
+      <!-- LEADERBOARD TABLE -->
+      <div class="bg-surface border border-borderSubtle rounded-xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto max-h-[360px]">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-ink text-[10px] font-mono uppercase text-slate-400 border-b border-borderSubtle sticky top-0">
+              <tr>
+                <th class="py-2.5 px-3">Participant</th>
+                <th class="py-2.5 px-3">Discipline</th>
+                <th class="py-2.5 px-3">Slope (ms/°)</th>
+                <th class="py-2.5 px-3">RT @ 0°</th>
+                <th class="py-2.5 px-3">RT @ 180°</th>
+                <th class="py-2.5 px-3">Accuracy</th>
+              </tr>
+            </thead>
+            <tbody id="cohortTableBody" class="divide-y divide-borderSubtle/50 text-slate-300">
+              <tr>
+                <td colspan="6" class="py-6 text-center text-slate-500">Fetching live sessions from database...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- SUPABASE & ISOMETRIC 3D RENDERING ENGINE -->
+  <script>
+    // Supabase Credentials
+    const SUPABASE_URL = "https://oslhhlifshwcjrogbtbh.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zbGhobGlmc2h3Y2pyb2didGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NDgzMzIsImV4cCI6MjA4ODIyNDMzMn0.2xSsDjJVyi1-H8m_5WsUXVM-H-imLLvY4Y2OZrOcH58";
+    const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+    // Web Audio Synthesizer for tactile feedback
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type = 'sine', duration = 0.09) {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // Shepard & Metzler 3D PolyCube Shapes (defined as coordinate lists of unit cubes)
+    // Asymmetric 3-arm orthogonal polycubes
+    const SHAPES = [
+      // Shape 1: Classic L-Z Arm
+      [
+        [0,0,0], [1,0,0], [2,0,0], [3,0,0],
+        [3,1,0], [3,2,0],
+        [3,2,1], [3,2,2], [3,2,3]
+      ],
+      // Shape 2: Double-Hook Arm
+      [
+        [0,0,0], [0,1,0], [0,2,0], [0,3,0],
+        [1,3,0], [2,3,0],
+        [2,3,1], [2,3,2],
+        [2,2,2], [2,1,2]
+      ],
+      // Shape 3: Spiral Arm
+      [
+        [0,0,0], [1,0,0], [2,0,0],
+        [2,0,1], [2,0,2], [2,0,3],
+        [2,1,3], [2,2,3],
+        [1,2,3], [0,2,3]
+      ]
+    ];
+
+    // Mathematical Isometric 3D Projection Renderer
+    function drawIsometricPolyCube(canvas, cubes, angleDegrees, isMirrored) {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const rad = (angleDegrees * Math.PI) / 180;
+      const cosA = Math.cos(rad);
+      const sinA = Math.sin(rad);
+
+      // Scale and isometric angles
+      const scale = 22; // size of cube edge in pixels
+      const cos30 = Math.cos(Math.PI / 6);
+      const sin30 = Math.sin(Math.PI / 6);
+
+      // Find centroid of the polycube to rotate around its center
+      let cx = 0, cy = 0, cz = 0;
+      cubes.forEach(c => { cx += c[0]; cy += c[1]; cz += c[2]; });
+      cx /= cubes.length; cy /= cubes.length; cz /= cubes.length;
+
+      // Project each cube center to 2D
+      const projectedCubes = cubes.map(c => {
+        let x = c[0] - cx;
+        let y = c[1] - cy;
+        let z = c[2] - cz;
+
+        // Apply mirror reflection across X axis if specified
+        if (isMirrored) {
+          x = -x;
+        }
+
+        // Standard 3D to 2D isometric projection
+        let isoX = (x - y) * cos30 * scale;
+        let isoY = ((x + y) * sin30 - z) * scale;
+
+        // Apply 2D in-plane rotation by angle
+        let rotX = isoX * cosA - isoY * sinA;
+        let rotY = isoX * sinA + isoY * cosA;
+
+        // Depth for Painter's algorithm
+        let depth = (x + y + z);
+
+        return {
+          orig: c,
+          x: w / 2 + rotX,
+          y: h / 2 + rotY,
+          depth: depth,
+          isoX: rotX,
+          isoY: rotY
+        };
+      });
+
+      // Painter's algorithm: sort back-to-front
+      projectedCubes.sort((a, b) => a.depth - b.depth);
+
+      // Draw each cube
+      projectedCubes.forEach(cube => {
+        drawSingleCube(ctx, cube.x, cube.y, scale, angleDegrees);
+      });
+    }
+
+    function drawSingleCube(ctx, cx, cy, s, angleDeg) {
+      const cos30 = Math.cos(Math.PI / 6) * s * 0.95;
+      const sin30 = Math.sin(Math.PI / 6) * s * 0.95;
+      const h = s * 0.95;
+
+      const rad = (angleDeg * Math.PI) / 180;
+      const cosA = Math.cos(rad);
+      const sinA = Math.sin(rad);
+
+      // Helper to rotate point around (cx, cy)
+      const rot = (dx, dy) => {
+        return {
+          x: cx + (dx * cosA - dy * sinA),
+          y: cy + (dx * sinA + dy * cosA)
+        };
+      };
+
+      // Top Face
+      const pTop = rot(0, -h);
+      const pTopR = rot(cos30, -sin30);
+      const pCenter = rot(0, 0);
+      const pTopL = rot(-cos30, -sin30);
+
+      // Bottom Points
+      const pBotR = rot(cos30, sin30 + h);
+      const pBot = rot(0, h + h);
+      const pBotL = rot(-cos30, sin30 + h);
+
+      // Draw Top Face (Light Slate)
+      ctx.fillStyle = '#cbd5e1';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(pCenter.x, pCenter.y);
+      ctx.lineTo(pTopR.x, pTopR.y);
+      ctx.lineTo(pTop.x, pTop.y);
+      ctx.lineTo(pTopL.x, pTopL.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Draw Left Face (Medium Slate)
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath();
+      ctx.moveTo(pCenter.x, pCenter.y);
+      ctx.lineTo(pTopL.x, pTopL.y);
+      ctx.lineTo(pBotL.x, pBotL.y);
+      ctx.lineTo(pBot.x, pBot.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Draw Right Face (Dark Slate)
+      ctx.fillStyle = '#334155';
+      ctx.beginPath();
+      ctx.moveTo(pCenter.x, pCenter.y);
+      ctx.lineTo(pTopR.x, pTopR.y);
+      ctx.lineTo(pBotR.x, pBotR.y);
+      ctx.lineTo(pBot.x, pBot.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // State Variables
+    let currentParticipant = { name: '', domain: 'Architecture' };
+    let trials = [];
+    let currentTrialIndex = 0;
+    let stimulusStartTime = 0;
+    let trialLogs = [];
+    let isAcceptingInput = false;
+    let slopeChartInstance = null;
+
+    // DOM References
+    const screenOnboarding = document.getElementById('screenOnboarding');
+    const screenCountdown = document.getElementById('screenCountdown');
+    const screenTrial = document.getElementById('screenTrial');
+    const screenResults = document.getElementById('screenResults');
+    const screenCohort = document.getElementById('screenCohort');
+
+    const inputName = document.getElementById('inputName');
+    const selectedDomain = document.getElementById('selectedDomain');
+    const btnStartTask = document.getElementById('btnStartTask');
+    const countdownNumber = document.getElementById('countdownNumber');
+
+    const trialIndicator = document.getElementById('trialIndicator');
+    const angleIndicator = document.getElementById('angleIndicator');
+    const trialProgressBar = document.getElementById('trialProgressBar');
+    const fixationCross = document.getElementById('fixationCross');
+    const canvasPairContainer = document.getElementById('canvasPairContainer');
+    const canvasA = document.getElementById('canvasA');
+    const canvasB = document.getElementById('canvasB');
+    const feedbackPill = document.getElementById('feedbackPill');
+    const stimulusBox = document.getElementById('stimulusBox');
+
+    const btnSame = document.getElementById('btnSame');
+    const btnMirror = document.getElementById('btnMirror');
+
+    const btnHeaderCohort = document.getElementById('btnHeaderCohort');
+    const btnCohortBack = document.getElementById('btnCohortBack');
+    const btnOpenCohort = document.getElementById('btnOpenCohort');
+    const btnRetake = document.getElementById('btnRetake');
+    const btnRefreshCohort = document.getElementById('btnRefreshCohort');
+    const btnCopyCohortReport = document.getElementById('btnCopyCohortReport');
+
+    // Domain pill selector
+    document.querySelectorAll('.domain-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.domain-pill').forEach(p => {
+          p.classList.remove('border-indigo-500', 'bg-indigo-500/20', 'text-white', 'font-bold');
+          p.classList.add('border-borderSubtle', 'bg-ink', 'text-slate-300');
+        });
+        pill.classList.add('border-indigo-500', 'bg-indigo-500/20', 'text-white', 'font-bold');
+        pill.classList.remove('border-borderSubtle', 'bg-ink', 'text-slate-300');
+        selectedDomain.value = pill.dataset.val;
+      });
+    });
+    // Default selection: Architecture
+    document.querySelector('.domain-pill[data-val="Architecture"]')?.click();
+
+    // Generate 20 Balanced Trials (5 angles x 2 conditions x 2 repetitions)
+    function buildTrialDeck() {
+      const angles = [0, 45, 90, 135, 180];
+      const conditions = ['same', 'mirror'];
+      const deck = [];
+
+      for (let rep = 0; rep < 2; rep++) {
+        angles.forEach(angle => {
+          conditions.forEach(cond => {
+            const shapeIdx = Math.floor(Math.random() * SHAPES.length);
+            deck.push({
+              shapeIndex: shapeIdx,
+              cubes: SHAPES[shapeIdx],
+              rotationAngle: angle,
+              condition: cond, // 'same' or 'mirror'
+              isMirrored: (cond === 'mirror')
+            });
+          });
+        });
+      }
+
+      // Fisher-Yates Shuffle
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+
+      return deck;
+    }
+
+    // Start Flow
+    btnStartTask.addEventListener('click', () => {
+      const name = inputName.value.trim() || 'Anonymous';
+      const domain = selectedDomain.value || 'General';
+      currentParticipant = { name, domain };
+
+      screenOnboarding.classList.add('hidden');
+      screenCountdown.classList.remove('hidden');
+      screenCountdown.classList.add('flex');
+
+      let count = 3;
+      countdownNumber.textContent = count;
+      playTone(440);
+
+      const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdownNumber.textContent = count;
+          playTone(440);
+        } else {
+          clearInterval(timer);
+          playTone(880, 'triangle', 0.15);
+          screenCountdown.classList.add('hidden');
+          screenCountdown.classList.remove('flex');
+          startActiveRun();
+        }
+      }, 850);
+    });
+
+    function startActiveRun() {
+      trials = buildTrialDeck();
+      currentTrialIndex = 0;
+      trialLogs = [];
+      screenTrial.classList.remove('hidden');
+      screenTrial.classList.add('flex');
+      nextTrial();
+    }
+
+    function nextTrial() {
+      if (currentTrialIndex >= trials.length) {
+        completeExperiment();
+        return;
+      }
+
+      isAcceptingInput = false;
+      const trial = trials[currentTrialIndex];
+
+      // Update Header
+      trialIndicator.textContent = `Trial ${currentTrialIndex + 1} / ${trials.length}`;
+      angleIndicator.textContent = `Rotation: ${trial.rotationAngle}°`;
+      trialProgressBar.style.width = `${((currentTrialIndex + 1) / trials.length) * 100}%`;
+
+      // Show Fixation Cross
+      canvasPairContainer.classList.add('hidden');
+      fixationCross.classList.remove('hidden');
+
+      // Present Figures after 400ms fixation delay
+      setTimeout(() => {
+        fixationCross.classList.add('hidden');
+        
+        // Render Figure A (Reference at 0°, not mirrored)
+        drawIsometricPolyCube(canvasA, trial.cubes, 0, false);
+
+        // Render Figure B (Rotated by angle, mirrored if condition == 'mirror')
+        drawIsometricPolyCube(canvasB, trial.cubes, trial.rotationAngle, trial.isMirrored);
+
+        canvasPairContainer.classList.remove('hidden');
+        stimulusStartTime = performance.now();
+        isAcceptingInput = true;
+      }, 400);
+    }
+
+    function handleResponse(choice) {
+      if (!isAcceptingInput) return;
+      isAcceptingInput = false;
+
+      const reactionTime = Math.round(performance.now() - stimulusStartTime);
+      const trial = trials[currentTrialIndex];
+      const isCorrect = (choice.toLowerCase() === trial.condition.toLowerCase());
+
+      // Haptic and audio
+      if (navigator.vibrate) navigator.vibrate(isCorrect ? 15 : [50, 50, 50]);
+      playTone(isCorrect ? 660 : 200, isCorrect ? 'sine' : 'sawtooth', 0.08);
+
+      // Feedback flash
+      if (!isCorrect) {
+        feedbackPill.textContent = `Correction: Was ${trial.condition.toUpperCase()}`;
+        feedbackPill.className = 'absolute top-3 px-3 py-1 rounded-full text-[11px] font-bold font-mono bg-red-500/20 text-red-400 border border-red-500/40';
+        feedbackPill.classList.remove('hidden');
+        stimulusBox.classList.add('border-red-500/60');
+      } else {
+        feedbackPill.classList.add('hidden');
+        stimulusBox.classList.remove('border-red-500/60');
+      }
+
+      trialLogs.push({
+        trialIndex: currentTrialIndex + 1,
+        shapeId: trial.shapeIndex + 1,
+        rotationAngle: trial.rotationAngle,
+        condition: trial.condition,
+        userResponse: choice,
+        isCorrect: isCorrect,
+        reactionTimeMs: reactionTime
+      });
+
+      currentTrialIndex++;
+      setTimeout(() => {
+        feedbackPill.classList.add('hidden');
+        stimulusBox.classList.remove('border-red-500/60');
+        nextTrial();
+      }, 250);
+    }
+
+    // Touch event listeners (pointerdown for zero mobile delay)
+    btnSame.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      handleResponse('same');
+    });
+    btnMirror.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      handleResponse('mirror');
+    });
+
+    // Keyboard controls (S / M or Left / Right arrows)
+    window.addEventListener('keydown', (e) => {
+      if (!isAcceptingInput) return;
+      const k = e.key.toLowerCase();
+      if (k === 's' || k === 'arrowleft' || k === '1') handleResponse('same');
+      if (k === 'm' || k === 'd' || k === 'arrowright' || k === '2') handleResponse('mirror');
+    });
+
+    // Complete Experiment & Calculate Linear Regression
+    async function completeExperiment() {
+      screenTrial.classList.add('hidden');
+      screenTrial.classList.remove('flex');
+      screenResults.classList.remove('hidden');
+
+      try {
+        confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } });
+      } catch (e) {}
+
+      // Metrics calculation
+      const correctTrials = trialLogs.filter(t => t.isCorrect);
+      const overallAccuracy = Number(((correctTrials.length / trialLogs.length) * 100).toFixed(1));
+
+      // Compute Mean RT per Angle for correct trials
+      const angles = [0, 45, 90, 135, 180];
+      const rtByAngle = {};
+      angles.forEach(ang => {
+        const matching = trialLogs.filter(t => t.rotationAngle === ang && t.isCorrect);
+        if (matching.length > 0) {
+          rtByAngle[ang] = Number((matching.reduce((acc, t) => acc + t.reactionTimeMs, 0) / matching.length).toFixed(1));
+        } else {
+          rtByAngle[ang] = 0;
+        }
+      });
+
+      // Linear Regression: RT = Slope * Angle + Intercept
+      // Using angles [0, 45, 90, 135, 180]
+      const validPoints = angles.filter(a => rtByAngle[a] > 0).map(a => ({ x: a, y: rtByAngle[a] }));
+      let slope = 0;
+      if (validPoints.length >= 2) {
+        const n = validPoints.length;
+        const sumX = validPoints.reduce((acc, p) => acc + p.x, 0);
+        const sumY = validPoints.reduce((acc, p) => acc + p.y, 0);
+        const sumXY = validPoints.reduce((acc, p) => acc + (p.x * p.y), 0);
+        const sumXX = validPoints.reduce((acc, p) => acc + (p.x * p.x), 0);
+        slope = Number(((n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX)).toFixed(2));
+      }
+
+      // Display Key Cards
+      document.getElementById('resultParticipantName').textContent = `${currentParticipant.name}'s Spatial Profile`;
+      document.getElementById('metricSlope').textContent = `${slope > 0 ? '+' : ''}${slope} ms/°`;
+      document.getElementById('metricAccuracy').textContent = `${overallAccuracy}%`;
+
+      // Interpretation
+      const insightBox = document.getElementById('spatialInsightBox');
+      if (slope <= 6.5) {
+        insightBox.innerHTML = `<strong>📐 Architectural / High-Dexterity Spatial Profile:</strong> Your rotation latency slope (${slope} ms/°) is exceptionally flat! This demonstrates effortless 3D holistic mental coordinate transformation, characteristic of trained architects and 3D geometric engineers.`;
+      } else if (slope <= 12) {
+        insightBox.innerHTML = `<strong>⚡ Moderate Rotation Latency:</strong> Your slope of +${slope} ms/° aligns with classic Shepard & Metzler benchmarks, reflecting progressive mental analog rotation through 3D space.`;
+      } else {
+        insightBox.innerHTML = `<strong>🔍 Sequential Feature Verification:</strong> A steeper slope (+${slope} ms/°) indicates deliberate, feature-by-feature verification rather than rapid analog spatial rotation, typical in non-spatial disciplines.`;
+      }
+
+      // Render Shepard-Metzler Chart using Chart.js
+      renderRegressionChart(angles, rtByAngle, slope);
+
+      // Sync to Supabase
+      const syncStatus = document.getElementById('resultSyncStatus');
+      syncStatus.textContent = 'Syncing session to database...';
+
+      if (!supabaseClient) {
+        syncStatus.textContent = 'Saved locally (Supabase client not loaded).';
+        return;
+      }
+
+      try {
+        const { data: sessionData, error: sessionErr } = await supabaseClient
+          .from('mental_rotation_sessions')
+          .insert([{
+            participant_name: currentParticipant.name,
+            domain: currentParticipant.domain,
+            device_info: navigator.userAgent,
+            screen_width: window.innerWidth,
+            mean_rt_0: rtByAngle[0] || null,
+            mean_rt_45: rtByAngle[45] || null,
+            mean_rt_90: rtByAngle[90] || null,
+            mean_rt_135: rtByAngle[135] || null,
+            mean_rt_180: rtByAngle[180] || null,
+            rotation_slope_ms_per_deg: slope,
+            overall_accuracy: overallAccuracy,
+            total_trials: trialLogs.length
+          }])
+          .select();
+
+        if (sessionErr) throw sessionErr;
+
+        const sessionId = sessionData[0]?.id;
+        if (sessionId && trialLogs.length > 0) {
+          const trialsPayload = trialLogs.map(t => ({
+            session_id: sessionId,
+            trial_index: t.trialIndex,
+            shape_id: t.shapeId,
+            rotation_angle: t.rotationAngle,
+            condition: t.condition,
+            user_response: t.userResponse,
+            is_correct: t.isCorrect,
+            reaction_time_ms: t.reactionTimeMs
+          }));
+
+          await supabaseClient.from('mental_rotation_trials').insert(trialsPayload);
+        }
+
+        syncStatus.innerHTML = `<span class="text-emerald-400">✓ Successfully recorded to research telemetry database!</span>`;
+      } catch (err) {
+        console.error('Supabase error:', err);
+        syncStatus.innerHTML = `<span class="text-amber-400">Session saved locally (Sync note: ${err.message || 'offline'})</span>`;
+      }
+    }
+
+    function renderRegressionChart(angles, rtByAngle, slope) {
+      const ctx = document.getElementById('slopeChart').getContext('2d');
+      if (slopeChartInstance) slopeChartInstance.destroy();
+
+      const dataPoints = angles.map(a => rtByAngle[a]);
+
+      slopeChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: angles.map(a => `${a}°`),
+          datasets: [{
+            label: 'Reaction Time (ms)',
+            data: dataPoints,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#818cf8',
+            pointRadius: 4,
+            tension: 0.15,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
+            },
+            y: {
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    // Cohort Data View
+    async function loadCohortData() {
+      const tbody = document.getElementById('cohortTableBody');
+      tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500">Fetching live sessions from Supabase...</td></tr>`;
+
+      if (!supabaseClient) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-400">Supabase client unavailable</td></tr>`;
+        return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('mental_rotation_sessions')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500">No sessions recorded yet. Be the first!</td></tr>`;
+          return;
+        }
+
+        document.getElementById('statCohortCount').textContent = data.length;
+        const avgSlope = (data.reduce((acc, r) => acc + (parseFloat(r.rotation_slope_ms_per_deg) || 0), 0) / data.length).toFixed(1);
+        const avgAcc = (data.reduce((acc, r) => acc + (parseFloat(r.overall_accuracy) || 0), 0) / data.length).toFixed(1);
+
+        document.getElementById('statCohortMeanSlope').textContent = `+${avgSlope} ms/°`;
+        document.getElementById('statCohortAcc').textContent = `${avgAcc}%`;
+
+        tbody.innerHTML = data.map(r => `
+          <tr class="hover:bg-white/5 transition">
+            <td class="py-2.5 px-3 font-semibold text-white">${escapeHtml(r.participant_name)}</td>
+            <td class="py-2.5 px-3 text-slate-400">${escapeHtml(r.domain)}</td>
+            <td class="py-2.5 px-3 font-mono font-bold ${parseFloat(r.rotation_slope_ms_per_deg) <= 6.5 ? 'text-emerald-400' : 'text-indigo-300'}">+${r.rotation_slope_ms_per_deg}</td>
+            <td class="py-2.5 px-3 font-mono text-slate-300">${Math.round(r.mean_rt_0 || 0)} ms</td>
+            <td class="py-2.5 px-3 font-mono text-slate-300">${Math.round(r.mean_rt_180 || 0)} ms</td>
+            <td class="py-2.5 px-3 font-mono text-slate-300">${r.overall_accuracy}%</td>
+          </tr>
+        `).join('');
+
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-400">Error loading cohort: ${e.message}</td></tr>`;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Navigation switches
+    btnHeaderCohort.addEventListener('click', () => {
+      screenOnboarding.classList.add('hidden');
+      screenCountdown.classList.add('hidden');
+      screenTrial.classList.add('hidden');
+      screenResults.classList.add('hidden');
+      screenCohort.classList.remove('hidden');
+      loadCohortData();
+    });
+
+    btnCohortBack.addEventListener('click', () => {
+      screenCohort.classList.add('hidden');
+      screenOnboarding.classList.remove('hidden');
+    });
+
+    btnOpenCohort.addEventListener('click', () => {
+      screenResults.classList.add('hidden');
+      screenCohort.classList.remove('hidden');
+      loadCohortData();
+    });
+
+    btnRetake.addEventListener('click', () => {
+      screenResults.classList.add('hidden');
+      screenOnboarding.classList.remove('hidden');
+    });
+
+    btnRefreshCohort.addEventListener('click', loadCohortData);
+
+    // Copy formatted report markdown
+    btnCopyCohortReport.addEventListener('click', async () => {
+      if (!supabaseClient) return;
+      const { data } = await supabaseClient.from('mental_rotation_sessions').select('*').order('created_at', { ascending: false });
+      if (!data || data.length === 0) {
+        alert('No data to export yet.');
+        return;
+      }
+
+      let md = `### Participant Experimental Results (Shepard & Metzler Mental Rotation Replication)\n\n`;
+      md += `| Participant | Discipline | Slope (k: ms/°) | Mean RT @ 0° | Mean RT @ 180° | Accuracy |\n`;
+      md += `| :--- | :--- | :--- | :--- | :--- | :--- |\n`;
+      data.forEach(r => {
+        md += `| ${r.participant_name} | ${r.domain} | +${r.rotation_slope_ms_per_deg} ms/° | ${Math.round(r.mean_rt_0 || 0)} ms | ${Math.round(r.mean_rt_180 || 0)} ms | ${r.overall_accuracy}% |\n`;
+      });
+
+      navigator.clipboard.writeText(md).then(() => {
+        alert('Copied Markdown table to clipboard! You can paste it directly into your assignment document.');
+      });
+    });
+
+    // Lucide Icons init
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
