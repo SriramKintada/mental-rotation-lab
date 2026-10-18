@@ -42,12 +42,14 @@ This laboratory platform provides a browser-based, zero-latency replication of t
 
 ## Empirical Observations (Cohort Findings)
 
-In a live cross-disciplinary deployment ($N = 9$), the platform captured nuanced cognitive strategies:
+In a live cross-disciplinary deployment ($N = 9$), the platform captured rich qualitative and quantitative cognitive strategies:
 
-* **Visual & Design Cohort:** Navya (Fine Arts) achieved 95% accuracy with steady 2 to 4 second reaction times ($k = +7.52\text{ ms}/^\circ$). Participants with spatial design backgrounds (Architecture and Electronics Hardware) exhibited flat or negative slopes (Saranya: $+1.95\text{ ms}/^\circ$, Vivek: $-9.79\text{ ms}/^\circ$, Devesh: $+1.21\text{ ms}/^\circ$).
-* **Individual Trial Artifacts:** Analytical profiles (Mathematics and Software) showed positive slopes (Sriram: $+29.76\text{ ms}/^\circ$, Keertan: $+7.37\text{ ms}/^\circ$), though Sriram's slope was skewed by an accidental trial delay at $135^\circ$ ($10,230\text{ ms}$). Vignesh also exhibited an isolated spike at $45^\circ$.
-* **Alternative Strategies & Fast Heuristics:** Anushka (Business Administration) attained 100% accuracy with an inverted slope ($-9.82\text{ ms}/^\circ$), relying on methodical corner feature verification. Harshith (Software Engineering) responded under 1,000 ms across all trials using a rapid visual heuristic.
-* **Hobbies and Non-Academic Factors:** Beyond formal academic degrees, personal visual hobbies (such as fast-paced 3D video gaming and CAD modeling) strongly influence spatial rotation agility.
+* **No Binary Disciplinary Separation:** Performance did not divide cleanly along formal academic lines. Instead, participants represented combinations of formal coursework, cognitive heuristics, and personal visual hobbies.
+* **Standout Visual Performance (Navya):** A Fine Arts student was the fastest deliberate responder (mean 3,122 ms) and achieved the highest accuracy among visual disciplines (95%), calmly resolving complex orientations without stumbling at large angles.
+* **Abstract Coordinate Projection (Vivek):** Working in abstract mathematics and topology, Vivek was exceptionally fast (mean 2,801 ms, dropping to 1,491 ms at 90° and 1,515 ms at 135° with 70% accuracy), applying instantaneous mental coordinate transformations rather than manual degree-by-degree rotation.
+* **Architecture and Hardware (Saranya & Devesh):** Saranya was medium-fast (median 2,058 ms), but her accuracy dropped to 65% after being tripped up by the 45° oblique view (7,623 ms). Devesh was deliberate and flat ($k = +1.21\text{ ms}/^\circ$) with 75% accuracy (4,500 ms average). Formal architecture training alone did not guarantee both top speed and accuracy.
+* **3D Gamers (Harshith & Keertan):** Software students with active 3D gaming hobbies showed strong spatial competence. Harshith exhibited sub-second twitch reflexes (605 ms average, 65% accuracy), while Keertan was deliberate and methodical (5,039 ms, 85% accuracy).
+* **Future Methodological Directions:** Future studies should recruit larger, dedicated cohorts of professional architects and competitive 3D gamers with a 100-trial battery to rigorously isolate gaming reflexes from formal architectural drafting skills.
 
 ---
 
