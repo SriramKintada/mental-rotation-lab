@@ -42,11 +42,12 @@ This laboratory platform provides a browser-based, zero-latency replication of t
 
 ## Empirical Observations (Cohort Findings)
 
-In a live cross-disciplinary deployment ($N = 7$), the platform captured distinct cognitive strategies:
+In a live cross-disciplinary deployment ($N = 9$), the platform captured nuanced cognitive strategies:
 
-* **Spatial Discipline Advantage:** Participants with formal training in spatial coordinate frames (Architecture and Electronics Hardware) exhibited flat or negative rotation slopes (Saranya: $k = +1.95\text{ ms}/^\circ$, Vivek: $k = -9.79\text{ ms}/^\circ$, Devesh: $k = +1.21\text{ ms}/^\circ$). Their professional experience with isometric CAD drawing and spatial layout minimizes or eliminates the latency cost of mental reorientation.
-* **Classic Analog Rotation:** Participants from analytical backgrounds (Mathematics and Software Engineering) showed positive linear slopes (Sriram: $k = +29.76\text{ ms}/^\circ$, Keertan: $k = +7.37\text{ ms}/^\circ$), with marked latency spikes at $135^\circ$.
-* **Alternative Verification Strategies:** Participants from managerial fields (Business Administration, Anushka) demonstrated 100% accuracy with an inverted slope, reflecting deliberate vertex-by-vertex feature checking rather than continuous holistic rotation. Similarly, heuristic-driven participants (Software Engineering, Harshith) maintained rapid response times throughout ($< 1,000\text{ ms}$) with moderate accuracy.
+* **Visual & Design Cohort:** Navya (Fine Arts) achieved 95% accuracy with steady 2 to 4 second reaction times ($k = +7.52\text{ ms}/^\circ$). Participants with spatial design backgrounds (Architecture and Electronics Hardware) exhibited flat or negative slopes (Saranya: $+1.95\text{ ms}/^\circ$, Vivek: $-9.79\text{ ms}/^\circ$, Devesh: $+1.21\text{ ms}/^\circ$).
+* **Individual Trial Artifacts:** Analytical profiles (Mathematics and Software) showed positive slopes (Sriram: $+29.76\text{ ms}/^\circ$, Keertan: $+7.37\text{ ms}/^\circ$), though Sriram's slope was skewed by an accidental trial delay at $135^\circ$ ($10,230\text{ ms}$). Vignesh also exhibited an isolated spike at $45^\circ$.
+* **Alternative Strategies & Fast Heuristics:** Anushka (Business Administration) attained 100% accuracy with an inverted slope ($-9.82\text{ ms}/^\circ$), relying on methodical corner feature verification. Harshith (Software Engineering) responded under 1,000 ms across all trials using a rapid visual heuristic.
+* **Hobbies and Non-Academic Factors:** Beyond formal academic degrees, personal visual hobbies (such as fast-paced 3D video gaming and CAD modeling) strongly influence spatial rotation agility.
 
 ---
 
