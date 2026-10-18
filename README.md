@@ -42,11 +42,11 @@ This laboratory platform provides a browser-based, zero-latency replication of t
 
 ## Empirical Observations (Cohort Findings)
 
-In a live cross-disciplinary deployment ($N = 6$), the platform captured distinct cognitive strategies:
+In a live cross-disciplinary deployment ($N = 7$), the platform captured distinct cognitive strategies:
 
-* **Spatial Discipline Advantage:** Participants with formal training in spatial coordinate frames (Architecture and Electronics Hardware) exhibited flat rotation slopes ($k = +1.95\text{ ms}/^\circ$ and $+1.21\text{ ms}/^\circ$). Their professional experience with isometric CAD drawing minimizes the latency cost of mental transformation.
-* **Classic Analog Rotation:** Participants from analytical backgrounds (Mathematics and Software Engineering) showed classic positive slopes ($k = +29.76\text{ ms}/^\circ$ and $+7.37\text{ ms}/^\circ$), with marked latency spikes at $135^\circ$.
-* **Analytical Feature Checking:** Participants from managerial fields (Business Administration) demonstrated 100% accuracy with an inverted slope, reflecting deliberate vertex-by-vertex feature checking rather than continuous holistic rotation.
+* **Spatial Discipline Advantage:** Participants with formal training in spatial coordinate frames (Architecture and Electronics Hardware) exhibited flat or negative rotation slopes (Saranya: $k = +1.95\text{ ms}/^\circ$, Vivek: $k = -9.79\text{ ms}/^\circ$, Devesh: $k = +1.21\text{ ms}/^\circ$). Their professional experience with isometric CAD drawing and spatial layout minimizes or eliminates the latency cost of mental reorientation.
+* **Classic Analog Rotation:** Participants from analytical backgrounds (Mathematics and Software Engineering) showed positive linear slopes (Sriram: $k = +29.76\text{ ms}/^\circ$, Keertan: $k = +7.37\text{ ms}/^\circ$), with marked latency spikes at $135^\circ$.
+* **Alternative Verification Strategies:** Participants from managerial fields (Business Administration, Anushka) demonstrated 100% accuracy with an inverted slope, reflecting deliberate vertex-by-vertex feature checking rather than continuous holistic rotation. Similarly, heuristic-driven participants (Software Engineering, Harshith) maintained rapid response times throughout ($< 1,000\text{ ms}$) with moderate accuracy.
 
 ---
 
